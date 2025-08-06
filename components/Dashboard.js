@@ -1,15 +1,3 @@
-#!/bin/bash
-
-# update-dashboard.sh
-# This script updates your page.js and creates the dashboard component
-
-cd kitchen-dashboard-app
-
-# Create components directory if it doesn't exist
-mkdir -p components
-
-# Save the Dashboard component
-cat > components/Dashboard.js << 'EOF'
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -400,28 +388,3 @@ export default function Dashboard() {
     </div>
   );
 }
-EOF
-
-# Update app/page.js to use the Dashboard
-cat > app/page.js << 'EOF'
-import Dashboard from '@/components/Dashboard';
-
-export default function Home() {
-  return <Dashboard />;
-}
-EOF
-
-echo "✅ Dashboard component created and page updated!"
-echo "Your dashboard should now show real data from Notion!"
-echo ""
-echo "The dashboard includes:"
-echo "  • Weather widget (Candler, NC)"
-echo "  • Financial overview with goal progress"
-echo "  • Shopping list from Notion"
-echo "  • Quick expense buttons"
-echo "  • Saving streak counter"
-echo "  • Tax tracker"
-echo "  • Investment preview"
-echo ""
-echo "Run 'npm run dev' to see your dashboard!"
-EOF
