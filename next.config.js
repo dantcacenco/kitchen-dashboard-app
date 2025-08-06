@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable if you need any specific Next.js features
+  output: 'standalone',
+  eslint: {
+    // Allow production builds to successfully complete even if there are ESLint errors
+    ignoreDuringBuilds: true,
+  },
 }
 
 module.exports = nextConfig

@@ -300,7 +300,7 @@ export default function Dashboard() {
             <div className="text-3xl font-bold mb-1">
               ${getTodaySpending().toFixed(2)}
             </div>
-            <div className="text-sm opacity-80 mb-4">Today's spending</div>
+            <div className="text-sm opacity-80 mb-4">Today&apos;s spending</div>
             <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={() => handleQuickExpense('Food')}
@@ -336,7 +336,7 @@ export default function Dashboard() {
             <div className="text-lg">Day Saving Streak!</div>
             <div className="mt-4 text-sm opacity-90">
               Next milestone: 30 days<br />
-              Unlock: "Consistent Saver" badge
+              Unlock: &quot;Consistent Saver&quot; badge
             </div>
           </div>
 
