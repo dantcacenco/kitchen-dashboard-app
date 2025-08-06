@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# update-dashboard.sh
-# Complete dashboard update with all requested features
+# final-dashboard-update.sh
+# Complete dashboard update with all fixes
 
-echo "🚀 Updating Kitchen Dashboard with all requested features..."
+echo "🚀 Updating Kitchen Dashboard with all fixes..."
 echo "=================================================="
 
 # Navigate to project directory
 cd kitchen-dashboard-app
 
-# Step 1: Update Dashboard.js component
-echo -e "\n📝 Updating Dashboard component..."
+# Step 1: Update Dashboard.js component with all fixes
+echo -e "\n📝 Updating Dashboard component with fixes..."
 cat > components/Dashboard.js << 'EOF'
 'use client';
 
@@ -20,7 +20,8 @@ import {
   ShoppingCart, TrendingUp, Receipt, Target,
   DollarSign, Plus, X, Check, ChevronDown, ChevronUp,
   Utensils, Fuel, Wrench, Home, Heart, Briefcase,
-  ShoppingBag, Car, Zap, Pill, Coffee, MoreHorizontal
+  ShoppingBag, Car, Zap, Pill, Coffee, MoreHorizontal,
+  Calendar, Edit2
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -40,6 +41,9 @@ export default function Dashboard() {
   const [addingInvestment, setAddingInvestment] = useState(false);
   const [investmentActivity, setInvestmentActivity] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
+  const [goalDetailModal, setGoalDetailModal] = useState(null);
+  const [goalTransactions, setGoalTransactions] = useState([]);
+  const [editingAmount, setEditingAmount] = useState('');
 
   // Real-time clock update
   useEffect(() => {
@@ -154,18 +158,10 @@ export default function Dashboard() {
       .reduce((sum, t) => sum + (t.properties?.Amount?.number || 0), 0);
   };
 
-  // Calculate YTD income for tax tracking
-  const getYTDIncome = () => {
-    const currentYear = new Date().getFullYear();
-    
+  // Get total expenses for tax calculation
+  const getTotalExpenses = () => {
     return transactions
-      .filter(t => {
-        const date = t.properties?.Date?.date?.start;
-        if (!date) return false;
-        const transDate = new Date(date);
-        return transDate.getFullYear() === currentYear &&
-               t.properties?.Category?.select?.name === 'Income';
-      })
+      .filter(t => t.properties?.Category?.select?.name !== 'Income')
       .reduce((sum, t) => sum + (t.properties?.Amount?.number || 0), 0);
   };
 
@@ -340,6 +336,87 @@ export default function Dashboard() {
     }
   };
 
+  // Handle goal click
+  const handleGoalClick = async (goal) => {
+    const goalName = goal.properties?.Goal_Name?.title?.[0]?.text?.content;
+    const relatedTransactions = transactions.filter(t => 
+      t.properties?.Description?.rich_text?.[0]?.text?.content?.includes(goalName) ||
+      t.properties?.Category?.select?.name === goalName
+    );
+    setGoalTransactions(relatedTransactions);
+    setGoalDetailModal(goal);
+    setEditingAmount(goal.properties?.Current_Amount?.number?.toString() || '0');
+  };
+
+  // Handle goal amount update
+  const handleGoalAmountUpdate = async () => {
+    if (!goalDetailModal || !editingAmount) return;
+    
+    try {
+      const res = await fetch('/api/notion', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pageId: goalDetailModal.id,
+          data: {
+            Current_Amount: parseFloat(editingAmount)
+          }
+        })
+      });
+      
+      if (res.ok) {
+        await fetchGoals();
+        setGoalDetailModal(null);
+      }
+    } catch (error) {
+      console.error('Error updating goal:', error);
+    }
+  };
+
+  // Handle goal contribution
+  const handleGoalContribution = async (amount, description) => {
+    if (!goalDetailModal || !amount) return;
+    
+    try {
+      const goalName = goalDetailModal.properties?.Goal_Name?.title?.[0]?.text?.content;
+      const currentAmount = goalDetailModal.properties?.Current_Amount?.number || 0;
+      const newAmount = currentAmount + parseFloat(amount);
+      
+      // Update goal amount
+      await fetch('/api/notion', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pageId: goalDetailModal.id,
+          data: {
+            Current_Amount: newAmount
+          }
+        })
+      });
+      
+      // Record transaction
+      await fetch('/api/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          database: 'transactions',
+          data: {
+            Date: new Date().toISOString(),
+            Amount: parseFloat(amount),
+            Category: goalName,
+            Description: description || `Contribution to ${goalName}`
+          }
+        })
+      });
+      
+      await fetchGoals();
+      await fetchTransactions();
+      setGoalDetailModal(null);
+    } catch (error) {
+      console.error('Error adding contribution:', error);
+    }
+  };
+
   // Expense categories with better icons
   const expenseCategories = [
     { name: 'Food', icon: Utensils },
@@ -389,7 +466,7 @@ export default function Dashboard() {
                   {weather?.current?.temperature_2m ? `${Math.round(weather.current.temperature_2m)}°F` : '--°F'}
                 </div>
                 <div className="text-lg opacity-90 mb-2">
-                  {weather?.current?.weathercode ? 'Mostly Sunny' : 'Loading...'}
+                  {weather?.current?.weathercode !== undefined ? 'Mostly Sunny' : ''}
                 </div>
                 {weather?.daily && (
                   <div className="flex items-center gap-4 text-sm opacity-80">
@@ -479,16 +556,21 @@ export default function Dashboard() {
               {/* Other goals */}
               <div className="space-y-3 pt-4 border-t">
                 {goals
-                  .filter(g => g.properties?.Category?.select?.name !== 'Investment')
+                  .filter(g => {
+                    const category = g.properties?.Category?.select?.name;
+                    return category !== 'Investment' && category !== 'Tax';
+                  })
                   .map(goal => {
                     const name = goal.properties?.Goal_Name?.title?.[0]?.text?.content || 'Unnamed Goal';
-                    const current = goal.properties?.Current_Amount?.number || 0;
+                    const current = name === 'Student Loan' ? 0 : (goal.properties?.Current_Amount?.number || 0);
                     const target = goal.properties?.Target_Amount?.number || 1;
                     const progress = target > 0 ? (current / target) * 100 : 0;
                     const icon = goal.properties?.Icon?.rich_text?.[0]?.text?.content || '🎯';
                     
                     return (
-                      <div key={goal.id} className="space-y-2">
+                      <div key={goal.id} 
+                           className="space-y-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                           onClick={() => handleGoalClick(goal)}>
                         <div className="flex justify-between text-sm">
                           <span className="font-medium">{icon} {name}</span>
                           <span className="text-gray-500">
@@ -581,7 +663,7 @@ export default function Dashboard() {
               <h2 className="text-sm font-semibold uppercase tracking-wide opacity-90">Tax Tracker</h2>
             </div>
             <div className="text-3xl font-bold">
-              ${Math.round(getYTDIncome() * 0.15).toLocaleString()}
+              ${Math.round(getTotalExpenses() * 0.12).toLocaleString()}
             </div>
           </div>
 
@@ -652,14 +734,106 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Goal Detail Modal */}
+      {goalDetailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">
+                {goalDetailModal.properties?.Icon?.rich_text?.[0]?.text?.content} {goalDetailModal.properties?.Goal_Name?.title?.[0]?.text?.content}
+              </h3>
+              <button onClick={() => setGoalDetailModal(null)}>
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            {/* Current Amount - Editable */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Current Amount</span>
+                <button onClick={() => setEditingAmount(goalDetailModal.properties?.Current_Amount?.number?.toString() || '0')}
+                        className="text-blue-600 hover:text-blue-700">
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={editingAmount}
+                  onChange={(e) => setEditingAmount(e.target.value)}
+                  className="text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-blue-500 outline-none"
+                />
+                <button onClick={handleGoalAmountUpdate}
+                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  Update
+                </button>
+              </div>
+            </div>
+            
+            {/* Add Contribution */}
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Add Contribution</h4>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Amount"
+                  className="flex-1 p-2 border rounded-lg"
+                  id="contribution-amount"
+                />
+                <input
+                  type="text"
+                  placeholder="Description"
+                  className="flex-1 p-2 border rounded-lg"
+                  id="contribution-desc"
+                />
+                <button onClick={() => {
+                  const amount = document.getElementById('contribution-amount').value;
+                  const desc = document.getElementById('contribution-desc').value;
+                  handleGoalContribution(amount, desc);
+                }}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                  Add
+                </button>
+              </div>
+            </div>
+            
+            {/* Transaction History */}
+            <div>
+              <h4 className="font-semibold mb-3">Activity History</h4>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {goalTransactions.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No activity yet</p>
+                ) : (
+                  goalTransactions.map(trans => (
+                    <div key={trans.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">
+                          ${trans.properties?.Amount?.number?.toFixed(2)}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {trans.properties?.Description?.rich_text?.[0]?.text?.content || 'No description'}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {new Date(trans.properties?.Date?.date?.start).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 EOF
-echo "✅ Updated Dashboard component"
+echo "✅ Updated Dashboard component with all fixes"
 
-# Step 2: Update Weather API route
-echo -e "\n📝 Updating Weather API route..."
+# Step 2: Keep Weather API route the same
+echo -e "\n📝 Keeping Weather API route unchanged..."
 cat > app/api/weather/route.js << 'EOF'
 import { NextResponse } from 'next/server';
 
@@ -694,10 +868,10 @@ export async function GET() {
 
 export const dynamic = 'force-dynamic';
 EOF
-echo "✅ Updated Weather API route"
+echo "✅ Weather API route unchanged"
 
-# Step 3: Update Notion API route
-echo -e "\n📝 Updating Notion API route..."
+# Step 3: Keep Notion API route the same
+echo -e "\n📝 Keeping Notion API route unchanged..."
 cat > app/api/notion/route.js << 'EOF'
 import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
@@ -908,7 +1082,7 @@ export async function DELETE(request) {
 
 export const dynamic = 'force-dynamic';
 EOF
-echo "✅ Updated Notion API route"
+echo "✅ Notion API route unchanged"
 
 # Step 4: Test the build
 echo -e "\n🧪 Testing build..."
@@ -920,11 +1094,19 @@ if [ $? -eq 0 ]; then
     # Step 5: Git commit and push
     echo -e "\n📤 Committing and pushing to GitHub..."
     git add .
-    git commit -m "Major dashboard update: Enhanced weather widget, iOS-style shopping list, monthly spending tracker, retirement investment focus, real-time clock, removed saving streak, simplified tax tracker"
+    git commit -m "Fix: Remove weather loading text, set Student Loan to \$0, remove Tax Savings, change tax tracker to 12% of expenses, add goal detail modals with history and edit functionality"
     git push origin main
     
-    echo -e "\n🎉 Update complete! Dashboard has been updated with all requested features and pushed to GitHub."
+    echo -e "\n🎉 Update complete! Dashboard has been updated with all requested fixes and pushed to GitHub."
     echo "Vercel will automatically deploy the changes."
+    echo -e "\nChanges made:"
+    echo "✅ Removed 'Loading...' text from weather widget"
+    echo "✅ Fixed Student Loan to show \$0"
+    echo "✅ Removed Tax Savings completely"
+    echo "✅ Tax tracker now shows 12% of total expenses"
+    echo "✅ Added click functionality to financial goals"
+    echo "✅ Added goal detail modal with transaction history"
+    echo "✅ Added ability to edit goal amounts and add contributions"
 else
     echo -e "\n❌ Build failed. Please check the errors above."
     exit 1
