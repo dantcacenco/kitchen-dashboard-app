@@ -48,6 +48,7 @@ export default function Dashboard() {
   const fetchWeather = async () => {
     try {
       const res = await fetch('/api/weather');
+      if (!res.ok) throw new Error('Weather fetch failed');
       const data = await res.json();
       setWeather(data);
     } catch (error) {
@@ -58,46 +59,56 @@ export default function Dashboard() {
   const fetchGoals = async () => {
     try {
       const res = await fetch('/api/notion?database=goals');
+      if (!res.ok) throw new Error('Goals fetch failed');
       const data = await res.json();
-      setGoals(data);
+      setGoals(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Goals fetch error:', error);
+      setGoals([]);
     }
   };
 
   const fetchShoppingList = async () => {
     try {
       const res = await fetch('/api/notion?database=shopping');
+      if (!res.ok) throw new Error('Shopping list fetch failed');
       const data = await res.json();
-      setShoppingList(data);
+      setShoppingList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Shopping list fetch error:', error);
+      setShoppingList([]);
     }
   };
 
   const fetchTransactions = async () => {
     try {
       const res = await fetch('/api/notion?database=transactions');
+      if (!res.ok) throw new Error('Transactions fetch failed');
       const data = await res.json();
-      setTransactions(data);
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Transactions fetch error:', error);
+      setTransactions([]);
     }
   };
 
   const fetchSettings = async () => {
     try {
       const res = await fetch('/api/notion?database=settings');
+      if (!res.ok) throw new Error('Settings fetch failed');
       const data = await res.json();
       const settingsMap = {};
-      data.forEach(item => {
-        const name = item.properties.Setting_Name?.title?.[0]?.text?.content;
-        const value = item.properties.Value?.rich_text?.[0]?.text?.content;
-        if (name) settingsMap[name] = value;
-      });
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          const name = item.properties?.Setting_Name?.title?.[0]?.text?.content;
+          const value = item.properties?.Value?.rich_text?.[0]?.text?.content;
+          if (name) settingsMap[name] = value;
+        });
+      }
       setSettings(settingsMap);
     } catch (error) {
       console.error('Settings fetch error:', error);
+      setSettings({});
     }
   };
 
@@ -106,23 +117,24 @@ export default function Dashboard() {
     const today = new Date().toDateString();
     return transactions
       .filter(t => {
-        const date = t.properties.Date?.date?.start;
+        const date = t.properties?.Date?.date?.start;
         return date && new Date(date).toDateString() === today;
       })
-      .reduce((sum, t) => sum + (t.properties.Amount?.number || 0), 0);
+      .reduce((sum, t) => sum + (t.properties?.Amount?.number || 0), 0);
   };
 
   // Calculate total net worth
   const getNetWorth = () => {
     return goals.reduce((sum, goal) => {
-      const current = goal.properties.Current_Amount?.number || 0;
-      const isDebt = goal.properties.Category?.select?.name === 'Debt';
+      const current = goal.properties?.Current_Amount?.number || 0;
+      const isDebt = goal.properties?.Category?.select?.name === 'Debt';
       return isDebt ? sum - current : sum + current;
     }, 0);
   };
 
   // Get weather icon
   const getWeatherIcon = (code) => {
+    if (!code) return <Cloud className="w-12 h-12" />;
     if (code <= 3) return <Sun className="w-12 h-12" />;
     if (code <= 48) return <Cloud className="w-12 h-12" />;
     if (code <= 65) return <CloudRain className="w-12 h-12" />;
@@ -151,6 +163,7 @@ export default function Dashboard() {
   // Quick expense handler
   const handleQuickExpense = async (category) => {
     console.log('Add expense for:', category);
+    // TODO: Implement expense modal
   };
 
   if (loading) {
@@ -182,17 +195,17 @@ export default function Dashboard() {
             <div className="flex items-center justify-between h-full">
               <div>
                 <div className="text-5xl font-light mb-2">
-                  {weather?.current?.temp?.toFixed(0) || '--'}°F
+                  {weather?.current?.temp ? `${Math.round(weather.current.temp)}°F` : '--°F'}
                 </div>
                 <div className="text-lg opacity-90">
-                  {weather?.current?.description || 'Loading...'}
+                  {weather?.current?.description || 'Loading weather...'}
                 </div>
                 <div className="text-sm opacity-75 mt-2">
-                  Feels like {weather?.current?.feels_like?.toFixed(0) || '--'}°F
+                  {weather?.current?.feels_like ? `Feels like ${Math.round(weather.current.feels_like)}°F` : ''}
                 </div>
               </div>
               <div>
-                {weather && getWeatherIcon(weather.current.weather_code)}
+                {weather && getWeatherIcon(weather.current?.weather_code)}
               </div>
             </div>
           </div>
@@ -210,34 +223,37 @@ export default function Dashboard() {
             
             {/* Goal Progress Bars */}
             <div className="space-y-4">
-              {goals.filter(g => g.properties.Category?.select?.name !== 'Debt').slice(0, 4).map((goal, i) => {
-                const name = goal.properties.Goal_Name?.title?.[0]?.text?.content || '';
-                const current = goal.properties.Current_Amount?.number || 0;
-                const target = goal.properties.Target_Amount?.number || 1;
-                const progress = target > 0 ? (current / target) * 100 : 0;
-                const icon = goal.properties.Icon?.rich_text?.[0]?.text?.content || '🎯';
-                const color = goal.properties.Color?.rich_text?.[0]?.text?.content || '#007AFF';
-                
-                return (
-                  <div key={goal.id} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{icon} {name}</span>
-                      <span className="text-gray-500">
-                        ${current.toLocaleString()} / ${target.toLocaleString()}
-                      </span>
+              {goals
+                .filter(g => g.properties?.Category?.select?.name !== 'Debt')
+                .slice(0, 4)
+                .map((goal) => {
+                  const name = goal.properties?.Goal_Name?.title?.[0]?.text?.content || 'Unnamed Goal';
+                  const current = goal.properties?.Current_Amount?.number || 0;
+                  const target = goal.properties?.Target_Amount?.number || 1;
+                  const progress = target > 0 ? (current / target) * 100 : 0;
+                  const icon = goal.properties?.Icon?.rich_text?.[0]?.text?.content || '🎯';
+                  const color = goal.properties?.Color?.rich_text?.[0]?.text?.content || '#007AFF';
+                  
+                  return (
+                    <div key={goal.id || Math.random()} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{icon} {name}</span>
+                        <span className="text-gray-500">
+                          ${current.toLocaleString()} / ${target.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min(progress, 100)}%`,
+                            backgroundColor: color 
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${Math.min(progress, 100)}%`,
-                          backgroundColor: color 
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
 
@@ -252,12 +268,12 @@ export default function Dashboard() {
                 <p className="text-gray-400 text-center py-4">No items yet</p>
               ) : (
                 shoppingList.slice(0, 6).map((item) => {
-                  const name = item.properties.Item?.title?.[0]?.text?.content || '';
-                  const purchased = item.properties.Purchased?.checkbox || false;
+                  const name = item.properties?.Item?.title?.[0]?.text?.content || 'Unnamed Item';
+                  const purchased = item.properties?.Purchased?.checkbox || false;
                   
                   return (
                     <div 
-                      key={item.id} 
+                      key={item.id || Math.random()} 
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
                     >
                       <div className={`w-5 h-5 rounded-full border-2 ${purchased ? 'bg-blue-600 border-blue-600' : 'border-blue-600'} flex items-center justify-center`}>
@@ -347,7 +363,7 @@ export default function Dashboard() {
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Investment Growth</h2>
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">
-              ${goals.find(g => g.properties.Category?.select?.name === 'Investment')?.properties.Current_Amount?.number?.toLocaleString() || '0'}
+              ${goals.find(g => g.properties?.Category?.select?.name === 'Investment')?.properties?.Current_Amount?.number?.toLocaleString() || '0'}
             </div>
             <div className="text-sm text-green-600 mb-4">+12.4% this year</div>
             
