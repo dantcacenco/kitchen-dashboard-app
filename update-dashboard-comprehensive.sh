@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Create all necessary files and updates
-cat << 'EOF' > update-dashboard-comprehensive.sh
-#!/bin/bash
-
 echo "🚀 Starting comprehensive dashboard update..."
 
 # 1. Update Notion setup script for new schemas
@@ -1180,7 +1176,3 @@ echo "  1. Run: node notion-setup-update.js (to create new databases)"
 echo "  2. Update .env.local with new database IDs"
 echo "  3. Test locally: npm run dev"
 echo "  4. Check deployment: https://kitchen-dashboard-app.vercel.app"
-EOF
-
-chmod +x update-dashboard-comprehensive.sh
-./update-dashboard-comprehensive.sh
