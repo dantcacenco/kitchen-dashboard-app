@@ -3,49 +3,40 @@ import { NextResponse } from "next/server";
 interface MetalPrice {
   gold: number;
   silver: number;
-  platinum?: number;
-  palladium?: number;
   timestamp: number;
 }
 
-interface MetalsLiveResponse {
-  gold: number;
-  silver: number;
-  platinum?: number;
-  palladium?: number;
+interface GoldPriceResponse {
+  items: Array<{
+    curr: string;
+    xauPrice: number;
+    xagPrice: number;
+  }>;
 }
 
 export async function GET() {
   try {
-    // metals.live provides free spot prices
-    const response = await fetch("https://api.metals.live/v1/spot", {
+    // goldprice.org provides free spot prices (no API key required)
+    const response = await fetch("https://data-asg.goldprice.org/dbXRates/USD", {
       next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
     if (!response.ok) {
-      throw new Error(`Metals API error: ${response.status}`);
+      throw new Error(`Gold Price API error: ${response.status}`);
     }
 
-    const data: MetalsLiveResponse[] = await response.json();
+    const data: GoldPriceResponse = await response.json();
 
-    // metals.live returns an array with the latest prices
-    // Each item has gold, silver, etc. in USD per troy ounce
-    const latestPrices = data[0];
-
-    if (!latestPrices) {
+    if (!data.items || data.items.length === 0) {
       throw new Error("No price data available");
     }
 
+    const latestPrices = data.items[0];
+
     // Convert to cents for consistency with our database
     const prices: MetalPrice = {
-      gold: Math.round(latestPrices.gold * 100),
-      silver: Math.round(latestPrices.silver * 100),
-      platinum: latestPrices.platinum
-        ? Math.round(latestPrices.platinum * 100)
-        : undefined,
-      palladium: latestPrices.palladium
-        ? Math.round(latestPrices.palladium * 100)
-        : undefined,
+      gold: Math.round(latestPrices.xauPrice * 100),
+      silver: Math.round(latestPrices.xagPrice * 100),
       timestamp: Date.now(),
     };
 
@@ -53,15 +44,13 @@ export async function GET() {
   } catch (error) {
     console.error("Metal prices API error:", error);
 
-    // Return fallback prices if API fails (last known approximate prices)
+    // Return error - frontend should use cached Convex data
     return NextResponse.json(
       {
-        gold: 260000, // ~$2600/oz
-        silver: 3000, // ~$30/oz
+        error: "Failed to fetch live prices. Using last known prices from database.",
         timestamp: Date.now(),
-        error: "Using fallback prices",
       },
-      { status: 200 }
+      { status: 503 }
     );
   }
 }

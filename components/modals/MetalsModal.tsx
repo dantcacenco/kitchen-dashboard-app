@@ -105,6 +105,15 @@ export function MetalsModal({ isOpen, onClose }: MetalsModalProps) {
           </div>
         </div>
 
+        {/* Last Updated */}
+        <div className="text-center text-xs text-gray-400">
+          {stats?.pricesUpdatedAt ? (
+            <>Prices updated: {formatDateRelative(stats.pricesUpdatedAt)}</>
+          ) : (
+            <>Prices not yet loaded</>
+          )}
+        </div>
+
         {/* Value Summary */}
         <div className="bg-gray-50 rounded-xl p-4">
           <div className="grid grid-cols-3 gap-4 text-center">

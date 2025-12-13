@@ -50,9 +50,16 @@ export const getCurrentPrices = query({
       .withIndex("byKey", (q) => q.eq("key", "silver_price"))
       .first();
 
+    // Get the most recent update time
+    const updatedAt = Math.max(
+      goldSetting?.updatedAt || 0,
+      silverSetting?.updatedAt || 0
+    );
+
     return {
       gold: goldSetting ? parseInt(goldSetting.value) : 0,
       silver: silverSetting ? parseInt(silverSetting.value) : 0,
+      updatedAt: updatedAt || null,
     };
   },
 });
@@ -168,6 +175,12 @@ export const getPortfolioStats = query({
     const goldPrice = goldSetting ? parseInt(goldSetting.value) : 0;
     const silverPrice = silverSetting ? parseInt(silverSetting.value) : 0;
 
+    // Get the most recent update time
+    const pricesUpdatedAt = Math.max(
+      goldSetting?.updatedAt || 0,
+      silverSetting?.updatedAt || 0
+    );
+
     let totalInvested = 0;
     let totalCurrentValue = 0;
     let goldOz = 0;
@@ -197,6 +210,7 @@ export const getPortfolioStats = query({
       silverOz,
       goldPrice,
       silverPrice,
+      pricesUpdatedAt: pricesUpdatedAt || null,
     };
   },
 });
