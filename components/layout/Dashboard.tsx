@@ -15,6 +15,7 @@ import { QuickStatsWidget } from "@/components/widgets/QuickStatsWidget";
 import {
   AddExpenseModal,
   AddIncomeModal,
+  AddGoalModal,
   GoalModal,
   MetalsModal,
   ExpensesModal,
@@ -43,6 +44,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
   const [showMetalsModal, setShowMetalsModal] = useState(false);
   const [showWeatherModal, setShowWeatherModal] = useState(false);
   const [selectedWeather, setSelectedWeather] = useState<Weather | null>(null);
+  const [showAddGoalModal, setShowAddGoalModal] = useState(false);
 
   // Fetch saved layout from Convex
   const savedLayout = useQuery(api.dashboardLayout.get);
@@ -92,6 +94,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
     setSelectedWeather(weather);
     setShowWeatherModal(true);
   };
+  const handleAddGoalClick = () => setShowAddGoalModal(true);
 
   // Widget components map
   const widgets: Record<string, React.ReactNode> = {
@@ -103,6 +106,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
       <SavingsWidget
         onGoalClick={handleGoalClick}
         onMetalsClick={handleMetalsClick}
+        onAddGoal={handleAddGoalClick}
       />
     ),
     expenses: (
@@ -199,6 +203,11 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
           setSelectedWeather(null);
         }}
         weather={selectedWeather}
+      />
+
+      <AddGoalModal
+        isOpen={showAddGoalModal}
+        onClose={() => setShowAddGoalModal(false)}
       />
     </>
   );
