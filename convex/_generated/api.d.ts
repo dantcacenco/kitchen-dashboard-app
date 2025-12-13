@@ -8,10 +8,13 @@
  * @module
  */
 
+import type * as crons from "../crons.js";
 import type * as dashboardLayout from "../dashboardLayout.js";
+import type * as http from "../http.js";
 import type * as income from "../income.js";
 import type * as incomeSources from "../incomeSources.js";
 import type * as metalHoldings from "../metalHoldings.js";
+import type * as metalPricesUpdater from "../metalPricesUpdater.js";
 import type * as savingsGoals from "../savingsGoals.js";
 import type * as shoppingList from "../shoppingList.js";
 import type * as transactions from "../transactions.js";
@@ -24,10 +27,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  crons: typeof crons;
   dashboardLayout: typeof dashboardLayout;
+  http: typeof http;
   income: typeof income;
   incomeSources: typeof incomeSources;
   metalHoldings: typeof metalHoldings;
+  metalPricesUpdater: typeof metalPricesUpdater;
   savingsGoals: typeof savingsGoals;
   shoppingList: typeof shoppingList;
   transactions: typeof transactions;
