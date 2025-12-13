@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { Button, Input, Select } from "@/components/ui";
-import { parseToCents } from "@/lib/formatters";
+import { parseToCents, formatCurrency } from "@/lib/formatters";
+
+interface GoalData {
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  icon: string;
+  color: string;
+  priority: string;
+}
 
 interface GoalFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
+  goalId?: Id<"savingsGoals">;
+  initialValues?: GoalData;
 }
 
 const PRIORITY_OPTIONS = [
@@ -44,17 +56,36 @@ const ICON_OPTIONS = [
   { value: "🛡️", label: "Emergency" },
 ];
 
-export function GoalForm({ onSuccess, onCancel }: GoalFormProps) {
-  const [name, setName] = useState("");
-  const [targetAmount, setTargetAmount] = useState("");
-  const [currentAmount, setCurrentAmount] = useState("");
-  const [icon, setIcon] = useState("🎯");
-  const [color, setColor] = useState("#22C55E");
-  const [priority, setPriority] = useState("medium");
+export function GoalForm({ onSuccess, onCancel, goalId, initialValues }: GoalFormProps) {
+  const isEditing = !!goalId && !!initialValues;
+
+  const [name, setName] = useState(initialValues?.name || "");
+  const [targetAmount, setTargetAmount] = useState(
+    initialValues ? (initialValues.targetAmount / 100).toFixed(2) : ""
+  );
+  const [currentAmount, setCurrentAmount] = useState(
+    initialValues ? (initialValues.currentAmount / 100).toFixed(2) : ""
+  );
+  const [icon, setIcon] = useState(initialValues?.icon || "🎯");
+  const [color, setColor] = useState(initialValues?.color || "#22C55E");
+  const [priority, setPriority] = useState(initialValues?.priority || "medium");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const addGoal = useMutation(api.savingsGoals.add);
+  const updateGoal = useMutation(api.savingsGoals.update);
+
+  // Reset form when initialValues change
+  useEffect(() => {
+    if (initialValues) {
+      setName(initialValues.name);
+      setTargetAmount((initialValues.targetAmount / 100).toFixed(2));
+      setCurrentAmount((initialValues.currentAmount / 100).toFixed(2));
+      setIcon(initialValues.icon);
+      setColor(initialValues.color);
+      setPriority(initialValues.priority);
+    }
+  }, [initialValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,17 +109,28 @@ export function GoalForm({ onSuccess, onCancel }: GoalFormProps) {
 
     setLoading(true);
     try {
-      await addGoal({
-        name: name.trim(),
-        targetAmount: parseToCents(targetAmount),
-        currentAmount: parseToCents(currentAmountValue.toString()),
-        icon,
-        color,
-        priority,
-      });
+      if (isEditing && goalId) {
+        await updateGoal({
+          id: goalId,
+          name: name.trim(),
+          targetAmount: parseToCents(targetAmount),
+          icon,
+          color,
+          priority,
+        });
+      } else {
+        await addGoal({
+          name: name.trim(),
+          targetAmount: parseToCents(targetAmount),
+          currentAmount: parseToCents(currentAmountValue.toString()),
+          icon,
+          color,
+          priority,
+        });
+      }
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add goal");
+      setError(err instanceof Error ? err.message : isEditing ? "Failed to update goal" : "Failed to add goal");
     } finally {
       setLoading(false);
     }
@@ -111,7 +153,7 @@ export function GoalForm({ onSuccess, onCancel }: GoalFormProps) {
         required
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      {isEditing ? (
         <Input
           label="Target Amount"
           type="number"
@@ -123,18 +165,32 @@ export function GoalForm({ onSuccess, onCancel }: GoalFormProps) {
           leftIcon={<span className="text-gray-500">$</span>}
           required
         />
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="Target Amount"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="10000.00"
+            value={targetAmount}
+            onChange={(e) => setTargetAmount(e.target.value)}
+            leftIcon={<span className="text-gray-500">$</span>}
+            required
+          />
 
-        <Input
-          label="Starting Amount"
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="0.00"
-          value={currentAmount}
-          onChange={(e) => setCurrentAmount(e.target.value)}
-          leftIcon={<span className="text-gray-500">$</span>}
-        />
-      </div>
+          <Input
+            label="Starting Amount"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            value={currentAmount}
+            onChange={(e) => setCurrentAmount(e.target.value)}
+            leftIcon={<span className="text-gray-500">$</span>}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Select
@@ -171,7 +227,7 @@ export function GoalForm({ onSuccess, onCancel }: GoalFormProps) {
           </Button>
         )}
         <Button type="submit" loading={loading} className="flex-1">
-          Add Goal
+          {isEditing ? "Save Changes" : "Add Goal"}
         </Button>
       </div>
     </form>

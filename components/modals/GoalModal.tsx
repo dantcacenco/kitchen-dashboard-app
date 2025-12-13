@@ -6,7 +6,8 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Modal, Button, Input, ProgressBar } from "@/components/ui";
 import { formatCurrency, formatDateRelative, parseToCents } from "@/lib/formatters";
-import { Plus, Minus, TrendingUp, TrendingDown, History } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, History, Settings } from "lucide-react";
+import { GoalForm } from "@/components/forms/GoalForm";
 
 interface GoalModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface GoalModalProps {
 }
 
 export function GoalModal({ isOpen, onClose, goalId }: GoalModalProps) {
-  const [mode, setMode] = useState<"view" | "add" | "subtract">("view");
+  const [mode, setMode] = useState<"view" | "add" | "subtract" | "edit">("view");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -102,23 +103,49 @@ export function GoalModal({ isOpen, onClose, goalId }: GoalModalProps) {
 
         {/* Action Buttons or Form */}
         {mode === "view" ? (
-          <div className="flex gap-3">
+          <div className="space-y-2">
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setMode("add")}
+                className="flex-1"
+                variant="primary"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Funds
+              </Button>
+              <Button
+                onClick={() => setMode("subtract")}
+                className="flex-1"
+                variant="secondary"
+              >
+                <Minus className="w-4 h-4 mr-2" />
+                Withdraw
+              </Button>
+            </div>
             <Button
-              onClick={() => setMode("add")}
-              className="flex-1"
-              variant="primary"
+              onClick={() => setMode("edit")}
+              className="w-full"
+              variant="ghost"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Funds
+              <Settings className="w-4 h-4 mr-2" />
+              Edit Goal
             </Button>
-            <Button
-              onClick={() => setMode("subtract")}
-              className="flex-1"
-              variant="secondary"
-            >
-              <Minus className="w-4 h-4 mr-2" />
-              Withdraw
-            </Button>
+          </div>
+        ) : mode === "edit" ? (
+          <div className="bg-gray-50 rounded-xl p-4">
+            <GoalForm
+              goalId={goalId!}
+              initialValues={{
+                name: goal.name,
+                targetAmount: goal.targetAmount,
+                currentAmount: goal.currentAmount,
+                icon: goal.icon,
+                color: goal.color,
+                priority: goal.priority,
+              }}
+              onSuccess={() => setMode("view")}
+              onCancel={() => setMode("view")}
+            />
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
