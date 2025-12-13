@@ -6,7 +6,11 @@ import { Card } from "@/components/ui";
 import { formatTemperature } from "@/lib/formatters";
 import { Weather } from "@/types";
 
-export function WeatherWidget() {
+interface WeatherWidgetProps {
+  onClick?: (weather: Weather) => void;
+}
+
+export function WeatherWidget({ onClick }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,11 +68,18 @@ export function WeatherWidget() {
   const { current, daily } = weather;
   const today = daily[0];
 
+  const handleClick = () => {
+    if (onClick && weather) {
+      onClick(weather);
+    }
+  };
+
   return (
     <Card
       variant="gradient"
       gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
       className="h-full text-white cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={handleClick}
     >
       <div className="widget-drag-handle h-full flex flex-col justify-between">
         {/* Current temp */}

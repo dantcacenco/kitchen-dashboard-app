@@ -4,3 +4,4 @@ export { GoalModal } from "./GoalModal";
 export { MetalsModal } from "./MetalsModal";
 export { ExpensesModal } from "./ExpensesModal";
 export { IncomeModal } from "./IncomeModal";
+export { WeatherModal } from "./WeatherModal";

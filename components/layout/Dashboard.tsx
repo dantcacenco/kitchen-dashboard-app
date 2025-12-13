@@ -19,7 +19,9 @@ import {
   MetalsModal,
   ExpensesModal,
   IncomeModal,
+  WeatherModal,
 } from "@/components/modals";
+import { Weather } from "@/types";
 
 import "react-grid-layout/css/styles.css";
 
@@ -39,6 +41,8 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<Id<"savingsGoals"> | null>(null);
   const [showMetalsModal, setShowMetalsModal] = useState(false);
+  const [showWeatherModal, setShowWeatherModal] = useState(false);
+  const [selectedWeather, setSelectedWeather] = useState<Weather | null>(null);
 
   // Fetch saved layout from Convex
   const savedLayout = useQuery(api.dashboardLayout.get);
@@ -84,10 +88,14 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
     setShowGoalModal(true);
   };
   const handleMetalsClick = () => setShowMetalsModal(true);
+  const handleWeatherClick = (weather: Weather) => {
+    setSelectedWeather(weather);
+    setShowWeatherModal(true);
+  };
 
   // Widget components map
   const widgets: Record<string, React.ReactNode> = {
-    weather: <WeatherWidget />,
+    weather: <WeatherWidget onClick={handleWeatherClick} />,
     income: <IncomeWidget onClick={handleIncomeClick} />,
     quickStats: <QuickStatsWidget />,
     shopping: <ShoppingWidget />,
@@ -182,6 +190,15 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
       <MetalsModal
         isOpen={showMetalsModal}
         onClose={() => setShowMetalsModal(false)}
+      />
+
+      <WeatherModal
+        isOpen={showWeatherModal}
+        onClose={() => {
+          setShowWeatherModal(false);
+          setSelectedWeather(null);
+        }}
+        weather={selectedWeather}
       />
     </>
   );
