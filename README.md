@@ -643,10 +643,42 @@ npm run dev:all
 The app auto-deploys to Vercel when pushing to main branch.
 Convex functions deploy automatically via the `CONVEX_DEPLOY_KEY`.
 
+#### Setting Up Vercel Environment Variables (Required for First Deploy)
+
 ```bash
-# Manual deploy (if needed)
-npx convex deploy
+# 1. Link project to Vercel (one-time setup)
+vercel link --yes
+
+# 2. Add required environment variables
+echo "https://usable-peacock-188.convex.cloud" | vercel env add NEXT_PUBLIC_CONVEX_URL production
+echo "35.5407" | vercel env add NEXT_PUBLIC_WEATHER_LAT production
+echo "-82.6909" | vercel env add NEXT_PUBLIC_WEATHER_LON production
+echo "Candler, NC" | vercel env add NEXT_PUBLIC_LOCATION_NAME production
+
+# 3. View all environment variables
+vercel env ls
+
+# 4. Pull env vars to local (optional - to sync local with production)
+vercel env pull .env.local
 ```
+
+#### Manual Deploy Commands
+```bash
+# Deploy Convex functions
+npx convex deploy
+
+# Deploy to Vercel manually (if auto-deploy is disabled)
+vercel --prod
+```
+
+#### Environment Variables Required on Vercel
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_CONVEX_URL` | Convex deployment URL | `https://usable-peacock-188.convex.cloud` |
+| `NEXT_PUBLIC_WEATHER_LAT` | Weather location latitude | `35.5407` |
+| `NEXT_PUBLIC_WEATHER_LON` | Weather location longitude | `-82.6909` |
+| `NEXT_PUBLIC_LOCATION_NAME` | Display name for location | `Candler, NC` |
 
 ---
 
