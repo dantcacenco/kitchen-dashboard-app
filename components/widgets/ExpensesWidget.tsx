@@ -24,7 +24,12 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   clothing: <Shirt className="w-5 h-5" />,
 };
 
-export function ExpensesWidget() {
+interface ExpensesWidgetProps {
+  onClick?: () => void;
+  onCategoryClick?: (category: string) => void;
+}
+
+export function ExpensesWidget({ onClick, onCategoryClick }: ExpensesWidgetProps) {
   const { start, end } = getCurrentMonthRange();
   const transactions = useQuery(api.transactions.listByDateRange, { start, end });
 
@@ -43,7 +48,8 @@ export function ExpensesWidget() {
     <Card
       variant="gradient"
       gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-      className="h-full text-white"
+      className="h-full text-white cursor-pointer"
+      onClick={onClick}
     >
       <div className="widget-drag-handle h-full flex flex-col">
         {/* Header */}
@@ -61,6 +67,10 @@ export function ExpensesWidget() {
             <button
               key={cat}
               className="bg-white/10 hover:bg-white/20 rounded-lg p-3 text-center transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCategoryClick?.(cat);
+              }}
             >
               <div className="flex justify-center mb-1">
                 {CATEGORY_ICONS[cat]}

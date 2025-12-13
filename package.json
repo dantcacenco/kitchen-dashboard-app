@@ -9,14 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@notionhq/client": "^2.3.0",
+    "clsx": "^2.1.1",
+    "convex": "^1.17.4",
     "date-fns": "^3.3.1",
-    "dotenv": "^17.2.1",
     "lucide-react": "^0.394.0",
     "next": "^14.2.31",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "recharts": "^2.12.7"
+    "react-grid-layout": "^1.5.0",
+    "recharts": "^2.12.7",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -26,6 +28,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.4"
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5"
   }
 }

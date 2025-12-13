@@ -5,10 +5,14 @@ import { api } from "@/convex/_generated/api";
 import { DollarSign, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui";
 import { formatCurrency } from "@/lib/formatters";
-import { getCurrentMonthRange, sum } from "@/lib/utils";
+import { sum } from "@/lib/utils";
 import { startOfWeek, endOfWeek } from "date-fns";
 
-export function IncomeWidget() {
+interface IncomeWidgetProps {
+  onClick?: () => void;
+}
+
+export function IncomeWidget({ onClick }: IncomeWidgetProps) {
   // Get this week's range
   const now = new Date();
   const weekStart = startOfWeek(now, { weekStartsOn: 0 }).getTime();
@@ -33,7 +37,10 @@ export function IncomeWidget() {
   const weekTotal = sum(weekIncome?.map((i) => i.amount) || []);
 
   return (
-    <Card className="h-full bg-green-50 border-green-100">
+    <Card
+      className="h-full bg-green-50 border-green-100 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
       <div className="widget-drag-handle h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">

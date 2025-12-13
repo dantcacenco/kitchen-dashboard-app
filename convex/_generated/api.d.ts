@@ -10,10 +10,12 @@
 
 import type * as dashboardLayout from "../dashboardLayout.js";
 import type * as income from "../income.js";
+import type * as incomeSources from "../incomeSources.js";
 import type * as metalHoldings from "../metalHoldings.js";
 import type * as savingsGoals from "../savingsGoals.js";
 import type * as shoppingList from "../shoppingList.js";
 import type * as transactions from "../transactions.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -24,10 +26,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   dashboardLayout: typeof dashboardLayout;
   income: typeof income;
+  incomeSources: typeof incomeSources;
   metalHoldings: typeof metalHoldings;
   savingsGoals: typeof savingsGoals;
   shoppingList: typeof shoppingList;
   transactions: typeof transactions;
+  users: typeof users;
 }>;
 
 /**
