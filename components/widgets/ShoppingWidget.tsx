@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { ShoppingCart, Plus, X, Check } from "lucide-react";
+import { ShoppingCart, Plus, X, Check, Send } from "lucide-react";
 import { Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
@@ -19,6 +19,7 @@ interface PendingItem {
 
 export function ShoppingWidget() {
   const [newItem, setNewItem] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   // Optimistic state
   const [pendingItems, setPendingItems] = useState<PendingItem[]>([]);
@@ -98,6 +99,28 @@ export function ShoppingWidget() {
     // On success, pending delete will be cleared naturally when server data updates
   }, [removeItem]);
 
+  const handleSendNotification = useCallback(async () => {
+    if (isSending) return;
+
+    setIsSending(true);
+    try {
+      const response = await fetch('/api/notify-shopping', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send notification');
+      }
+
+      // Could show a toast here, but for now just log
+      console.log('Notification sent successfully');
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    } finally {
+      setIsSending(false);
+    }
+  }, [isSending]);
+
   // Merge server items with optimistic state
   const displayItems = useMemo(() => {
     const serverItems = (items || [])
@@ -139,9 +162,24 @@ export function ShoppingWidget() {
       <div className="widget-drag-handle flex items-center gap-2 mb-3">
         <ShoppingCart className="w-5 h-5 text-blue-600" />
         <h3 className="font-semibold text-gray-900">Shopping List</h3>
-        <button className="ml-auto p-1 hover:bg-gray-100 rounded">
-          <X className="w-4 h-4 text-gray-400" />
-        </button>
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={handleSendNotification}
+            disabled={isSending}
+            className={cn(
+              "p-1 rounded transition-colors",
+              isSending
+                ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                : "hover:bg-blue-100 text-blue-500 hover:text-blue-600"
+            )}
+            title="Send notification"
+          >
+            <Send className={cn("w-4 h-4", isSending && "animate-pulse")} />
+          </button>
+          <button className="p-1 hover:bg-gray-100 rounded">
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
       </div>
 
       {/* Add item form */}

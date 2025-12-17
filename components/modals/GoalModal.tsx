@@ -6,8 +6,9 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Modal, Button, Input, ProgressBar } from "@/components/ui";
 import { formatCurrency, formatDateRelative, parseToCents } from "@/lib/formatters";
-import { Plus, Minus, TrendingUp, TrendingDown, History, Settings } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, History, Settings, LineChart } from "lucide-react";
 import { GoalForm } from "@/components/forms/GoalForm";
+import { GoalProgressChart } from "@/components/charts";
 
 interface GoalModalProps {
   isOpen: boolean;
@@ -198,6 +199,24 @@ export function GoalModal({ isOpen, onClose, goalId }: GoalModalProps) {
               </Button>
             </div>
           </form>
+        )}
+
+        {/* Progress Chart */}
+        {history && history.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <LineChart className="w-4 h-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Progress Over Time</h3>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <GoalProgressChart
+                history={history}
+                targetAmount={goal.targetAmount}
+                currentAmount={goal.currentAmount}
+                color={goal.color}
+              />
+            </div>
+          </div>
         )}
 
         {/* History Section */}

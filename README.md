@@ -285,6 +285,7 @@ const defaultLayout = [
 - **Actions:** Add item, check/uncheck, delete (swipe)
 - **Optimistic:** Check/uncheck updates UI immediately
 - **Sort:** Uncompleted first, then by priority
+- **SMS Notification:** Paper airplane button sends "Shopping List Updated!" text to configured phone numbers via Twilio
 
 ### 3. Expenses Widget
 - **Display:** Category grid with totals
@@ -345,6 +346,14 @@ GET https://api.metals.live/v1/spot
 Returns: { gold: 2311.50, silver: 62.12, platinum: 1756.20, palladium: 1245.00 }
 ```
 
+### SMS Notifications - Twilio
+```
+POST /api/notify-shopping
+- Sends SMS to configured phone numbers
+- Message: "Shopping List Updated! View on: https://kitchen-dashboard-app.vercel.app"
+- Uses Twilio API for delivery
+```
+
 ---
 
 ## File Structure
@@ -356,8 +365,12 @@ kitchen-dashboard-app/
 │   ├── page.tsx                   # Dashboard page
 │   ├── globals.css                # Global styles
 │   └── api/
-│       └── weather/
-│           └── route.ts           # Weather API proxy
+│       ├── weather/
+│       │   └── route.ts           # Weather API proxy
+│       ├── metal-prices/
+│       │   └── route.ts           # Metal prices API proxy
+│       └── notify-shopping/
+│           └── route.ts           # SMS notification endpoint
 │
 ├── components/
 │   ├── layout/
@@ -438,7 +451,8 @@ kitchen-dashboard-app/
 │   ├── utils.ts                   # Utility functions
 │   ├── formatters.ts              # Currency, date formatters
 │   ├── constants.ts               # App constants
-│   └── categories.ts              # Category definitions
+│   ├── categories.ts              # Category definitions
+│   └── twilio.ts                  # Twilio SMS client
 │
 ├── types/
 │   └── index.ts                   # TypeScript types
@@ -679,6 +693,9 @@ vercel --prod
 | `NEXT_PUBLIC_WEATHER_LAT` | Weather location latitude | `35.5407` |
 | `NEXT_PUBLIC_WEATHER_LON` | Weather location longitude | `-82.6909` |
 | `NEXT_PUBLIC_LOCATION_NAME` | Display name for location | `Candler, NC` |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID for SMS | `AC...` |
+| `TWILIO_AUTH_TOKEN` | Twilio auth token for SMS | `...` |
+| `TWILIO_PHONE_NUMBER` | Twilio phone number to send from | `+18556503566` |
 
 ---
 
@@ -719,4 +736,4 @@ vercel --prod
 
 ---
 
-*Last updated: December 13, 2025*
+*Last updated: December 16, 2025*

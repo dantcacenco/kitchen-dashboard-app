@@ -7,10 +7,13 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Modal, Button, Select } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { EXPENSE_CATEGORIES, TIME_RANGES } from "@/lib/constants";
+import { ExpensesPieChart, ExpensesBarChart } from "@/components/charts";
+import { ChartView } from "@/components/views";
 import {
   Plus,
   Table,
   PieChart,
+  BarChart3,
   Trash2,
   ShoppingCart,
   Fuel,
@@ -69,7 +72,7 @@ export function ExpensesModal({
   onClose,
   onAddNew,
 }: ExpensesModalProps) {
-  const [view, setView] = useState<"table" | "chart">("table");
+  const [view, setView] = useState<"table" | "pie" | "bar">("table");
   const [timeRange, setTimeRange] = useState("this_month");
 
   const { start, end } = getDateRange(timeRange);
@@ -128,18 +131,31 @@ export function ExpensesModal({
                   ? "bg-blue-100 text-blue-600"
                   : "text-gray-400 hover:bg-gray-100"
               }`}
+              title="Table view"
             >
               <Table className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setView("chart")}
+              onClick={() => setView("pie")}
               className={`p-2 rounded-lg transition-colors ${
-                view === "chart"
+                view === "pie"
                   ? "bg-blue-100 text-blue-600"
                   : "text-gray-400 hover:bg-gray-100"
               }`}
+              title="Pie chart"
             >
               <PieChart className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setView("bar")}
+              className={`p-2 rounded-lg transition-colors ${
+                view === "bar"
+                  ? "bg-blue-100 text-blue-600"
+                  : "text-gray-400 hover:bg-gray-100"
+              }`}
+              title="Bar chart"
+            >
+              <BarChart3 className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -153,44 +169,14 @@ export function ExpensesModal({
         </div>
 
         {/* View Content */}
-        {view === "chart" ? (
-          <div className="space-y-4">
-            {/* Simple bar chart */}
-            <div className="space-y-3">
-              {chartData.map((item) => {
-                const Icon = iconMap[
-                  EXPENSE_CATEGORIES[item.category as keyof typeof EXPENSE_CATEGORIES]?.icon
-                ] || MoreHorizontal;
-                return (
-                  <div key={item.category} className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${item.color}20` }}
-                    >
-                      <Icon className="w-5 h-5" style={{ color: item.color }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">{item.label}</span>
-                        <span className="text-sm text-gray-600">
-                          {formatCurrency(item.amount)} ({item.percent.toFixed(1)}%)
-                        </span>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${item.percent}%`,
-                            backgroundColor: item.color,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        {view === "pie" ? (
+          <ChartView title="Spending by Category">
+            <ExpensesPieChart data={chartData} />
+          </ChartView>
+        ) : view === "bar" ? (
+          <ChartView title="Category Comparison">
+            <ExpensesBarChart data={chartData} />
+          </ChartView>
         ) : (
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {transactions && transactions.length > 0 ? (

@@ -67,12 +67,12 @@ export function getTimeRange(range: "this_month" | "this_year" | "last_year" | "
 /**
  * Debounce function
  */
-export function debounce<T extends (...args: unknown[]) => unknown>(
-  fn: T,
+export function debounce<Args extends unknown[]>(
+  fn: (...args: Args) => void,
   delay: number
-): (...args: Parameters<T>) => void {
+): (...args: Args) => void {
   let timeoutId: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
+  return (...args: Args) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delay);
   };
