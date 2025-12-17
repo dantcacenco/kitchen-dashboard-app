@@ -55,12 +55,30 @@ export const DEFAULT_LAYOUT = [
   { i: "expenses", x: 0, y: 5, w: 12, h: 2, minW: 6, minH: 2 },
 ];
 
+// Mobile layout (1-column, fixed order)
+export const MOBILE_LAYOUT = [
+  { i: "shopping", x: 0, y: 0, w: 1, h: 3 },
+  { i: "quickStats", x: 0, y: 3, w: 1, h: 2 },
+  { i: "income", x: 0, y: 5, w: 1, h: 2 },
+  { i: "savings", x: 0, y: 7, w: 1, h: 3 },
+  { i: "expenses", x: 0, y: 10, w: 1, h: 2 },
+  { i: "weather", x: 0, y: 12, w: 1, h: 2 },
+];
+
 // Grid configuration
 export const GRID_CONFIG = {
   cols: 12,
   rowHeight: 100,
   margin: [16, 16] as [number, number],
   containerPadding: [16, 16] as [number, number],
+};
+
+// Mobile grid configuration
+export const MOBILE_GRID_CONFIG = {
+  cols: 1,
+  rowHeight: 100,
+  margin: [0, 12] as [number, number],
+  containerPadding: [0, 0] as [number, number],
 };
 
 // Time ranges for filtering

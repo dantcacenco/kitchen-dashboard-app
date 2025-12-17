@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import GridLayout, { Layout } from "react-grid-layout";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { DEFAULT_LAYOUT, GRID_CONFIG } from "@/lib/constants";
+import { DEFAULT_LAYOUT, GRID_CONFIG, MOBILE_LAYOUT, MOBILE_GRID_CONFIG } from "@/lib/constants";
 import { WeatherWidget } from "@/components/widgets/WeatherWidget";
 import { ShoppingWidget } from "@/components/widgets/ShoppingWidget";
 import { ExpensesWidget } from "@/components/widgets/ExpensesWidget";
@@ -32,6 +32,18 @@ interface DashboardProps {
 
 export function Dashboard({ isEditing = false }: DashboardProps) {
   const [containerWidth, setContainerWidth] = useState(1200);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile breakpoint
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Modal states
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
@@ -50,19 +62,22 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
   const savedLayout = useQuery(api.dashboardLayout.get);
   const saveLayout = useMutation(api.dashboardLayout.save);
 
-  // Parse saved layout or use default
-  const currentLayout: Layout[] = savedLayout?.layouts
-    ? JSON.parse(savedLayout.layouts)
-    : DEFAULT_LAYOUT;
+  // Parse saved layout or use default/mobile layout
+  const currentLayout: Layout[] = isMobile
+    ? MOBILE_LAYOUT
+    : (savedLayout?.layouts ? JSON.parse(savedLayout.layouts) : DEFAULT_LAYOUT);
 
-  // Handle layout changes
+  // Use mobile or desktop grid config
+  const gridConfig = isMobile ? MOBILE_GRID_CONFIG : GRID_CONFIG;
+
+  // Handle layout changes (disabled on mobile)
   const handleLayoutChange = useCallback(
     (newLayout: Layout[]) => {
-      if (isEditing) {
+      if (isEditing && !isMobile) {
         saveLayout({ layouts: JSON.stringify(newLayout) });
       }
     },
-    [isEditing, saveLayout]
+    [isEditing, isMobile, saveLayout]
   );
 
   // Measure container width on mount
@@ -123,13 +138,13 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
         <GridLayout
           className="layout"
           layout={currentLayout}
-          cols={GRID_CONFIG.cols}
-          rowHeight={GRID_CONFIG.rowHeight}
+          cols={gridConfig.cols}
+          rowHeight={gridConfig.rowHeight}
           width={containerWidth}
-          margin={GRID_CONFIG.margin}
-          containerPadding={GRID_CONFIG.containerPadding}
-          isDraggable={isEditing}
-          isResizable={isEditing}
+          margin={gridConfig.margin}
+          containerPadding={gridConfig.containerPadding}
+          isDraggable={isEditing && !isMobile}
+          isResizable={isEditing && !isMobile}
           onLayoutChange={handleLayoutChange}
           draggableHandle=".widget-drag-handle"
           useCSSTransforms={true}
@@ -137,7 +152,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
           {currentLayout.map((item) => (
             <div
               key={item.i}
-              className={`${isEditing ? "ring-2 ring-blue-400 ring-opacity-50" : ""}`}
+              className={`${isEditing && !isMobile ? "ring-2 ring-blue-400 ring-opacity-50" : ""}`}
             >
               {widgets[item.i] || (
                 <div className="bg-gray-100 rounded-xl h-full flex items-center justify-center">
