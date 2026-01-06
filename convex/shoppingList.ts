@@ -76,8 +76,10 @@ export const clearAll = mutation({
   handler: async (ctx) => {
     const allItems = await ctx.db.query("shoppingList").collect();
 
-    // Delete all items in parallel
-    await Promise.all(allItems.map(item => ctx.db.delete(item._id)));
+    // Delete items sequentially (Convex requirement)
+    for (const item of allItems) {
+      await ctx.db.delete(item._id);
+    }
 
     return allItems.length;
   },
