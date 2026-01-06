@@ -125,12 +125,28 @@ export function ShoppingWidget() {
   const handleClearAll = useCallback(async () => {
     if (!confirm('Are you sure you want to clear the entire list?')) return;
 
+    // Get all current item IDs
+    const allIds = (items || []).map(item => item._id.toString());
+
+    // Optimistically hide all items
+    setPendingDeletes(prev => {
+      const next = new Set(prev);
+      allIds.forEach(id => next.add(id));
+      return next;
+    });
+
     try {
       await clearAll();
     } catch (error) {
       console.error('Error clearing list:', error);
+      // On error, restore all items
+      setPendingDeletes(prev => {
+        const next = new Set(prev);
+        allIds.forEach(id => next.delete(id));
+        return next;
+      });
     }
-  }, [clearAll]);
+  }, [clearAll, items]);
 
   // Merge server items with optimistic state
   const displayItems = useMemo(() => {
@@ -215,7 +231,7 @@ export function ShoppingWidget() {
             <div
               key={item._id.toString()}
               className={cn(
-                "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-opacity",
+                "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 group transition-opacity",
                 item.completed && "opacity-50",
                 isPending && "opacity-70"
               )}
