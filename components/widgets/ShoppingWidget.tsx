@@ -31,7 +31,6 @@ export function ShoppingWidget() {
   const addItem = useMutation(api.shoppingList.add);
   const toggleItem = useMutation(api.shoppingList.toggle);
   const removeItem = useMutation(api.shoppingList.remove);
-  const clearAll = useMutation(api.shoppingList.clearAll);
 
   const handleAddItem = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,14 +124,36 @@ export function ShoppingWidget() {
   const handleClearAll = useCallback(async () => {
     if (!confirm('Are you sure you want to clear the entire list?')) return;
 
+    if (!items || items.length === 0) return;
+
+    // Get all current items
+    const allItems = [...items];
+
+    // Optimistically hide all items
+    const allIds = allItems.map(item => item._id.toString());
+    setPendingDeletes(prev => {
+      const next = new Set(prev);
+      allIds.forEach(id => next.add(id));
+      return next;
+    });
+
+    // Delete each item using the working removeItem mutation
     try {
-      const result = await clearAll();
-      console.log(`Cleared ${result} items`);
+      await Promise.all(
+        allItems.map(item => removeItem({ id: item._id }))
+      );
+      console.log(`Cleared ${allItems.length} items`);
     } catch (error) {
       console.error('Error clearing list:', error);
+      // On error, restore all items
+      setPendingDeletes(prev => {
+        const next = new Set(prev);
+        allIds.forEach(id => next.delete(id));
+        return next;
+      });
       alert('Failed to clear the list. Please try again.');
     }
-  }, [clearAll]);
+  }, [items, removeItem]);
 
   // Merge server items with optimistic state
   const displayItems = useMemo(() => {
