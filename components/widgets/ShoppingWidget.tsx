@@ -125,28 +125,14 @@ export function ShoppingWidget() {
   const handleClearAll = useCallback(async () => {
     if (!confirm('Are you sure you want to clear the entire list?')) return;
 
-    // Get all current item IDs
-    const allIds = (items || []).map(item => item._id.toString());
-
-    // Optimistically hide all items
-    setPendingDeletes(prev => {
-      const next = new Set(prev);
-      allIds.forEach(id => next.add(id));
-      return next;
-    });
-
     try {
-      await clearAll();
+      const result = await clearAll();
+      console.log(`Cleared ${result} items`);
     } catch (error) {
       console.error('Error clearing list:', error);
-      // On error, restore all items
-      setPendingDeletes(prev => {
-        const next = new Set(prev);
-        allIds.forEach(id => next.delete(id));
-        return next;
-      });
+      alert('Failed to clear the list. Please try again.');
     }
-  }, [clearAll, items]);
+  }, [clearAll]);
 
   // Merge server items with optimistic state
   const displayItems = useMemo(() => {

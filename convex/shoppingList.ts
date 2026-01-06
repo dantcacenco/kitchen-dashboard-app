@@ -76,9 +76,8 @@ export const clearAll = mutation({
   handler: async (ctx) => {
     const allItems = await ctx.db.query("shoppingList").collect();
 
-    for (const item of allItems) {
-      await ctx.db.delete(item._id);
-    }
+    // Delete all items in parallel
+    await Promise.all(allItems.map(item => ctx.db.delete(item._id)));
 
     return allItems.length;
   },
