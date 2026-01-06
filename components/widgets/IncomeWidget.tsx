@@ -6,7 +6,7 @@ import { DollarSign, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui";
 import { formatCurrency } from "@/lib/formatters";
 import { sum } from "@/lib/utils";
-import { startOfWeek, endOfWeek } from "date-fns";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 
 interface IncomeWidgetProps {
   onClick?: () => void;
@@ -18,9 +18,9 @@ export function IncomeWidget({ onClick }: IncomeWidgetProps) {
   const weekStart = startOfWeek(now, { weekStartsOn: 0 }).getTime();
   const weekEnd = endOfWeek(now, { weekStartsOn: 0 }).getTime();
 
-  // Get today's range
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const todayEnd = todayStart + 24 * 60 * 60 * 1000 - 1;
+  // Get this month's range
+  const monthStart = startOfMonth(now).getTime();
+  const monthEnd = endOfMonth(now).getTime();
 
   // Queries
   const weekIncome = useQuery(api.income.listByDateRange, {
@@ -28,13 +28,13 @@ export function IncomeWidget({ onClick }: IncomeWidgetProps) {
     end: weekEnd,
   });
 
-  const todayIncome = useQuery(api.income.listByDateRange, {
-    start: todayStart,
-    end: todayEnd,
+  const monthIncome = useQuery(api.income.listByDateRange, {
+    start: monthStart,
+    end: monthEnd,
   });
 
-  const todayTotal = sum(todayIncome?.map((i) => i.amount) || []);
   const weekTotal = sum(weekIncome?.map((i) => i.amount) || []);
+  const monthTotal = sum(monthIncome?.map((i) => i.amount) || []);
 
   return (
     <Card
@@ -53,15 +53,15 @@ export function IncomeWidget({ onClick }: IncomeWidgetProps) {
         {/* Stats */}
         <div className="space-y-3 flex-1">
           <div>
-            <p className="text-xs text-gray-500 uppercase">Today</p>
+            <p className="text-xs text-gray-500 uppercase">This Week</p>
             <p className="text-2xl font-bold text-gray-900">
-              {formatCurrency(todayTotal)}
+              {formatCurrency(weekTotal)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 uppercase">This Week</p>
+            <p className="text-xs text-gray-500 uppercase">This Month</p>
             <p className="text-lg font-semibold text-gray-700">
-              {formatCurrency(weekTotal)}
+              {formatCurrency(monthTotal)}
             </p>
           </div>
         </div>

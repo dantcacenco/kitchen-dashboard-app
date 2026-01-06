@@ -31,6 +31,7 @@ export function ShoppingWidget() {
   const addItem = useMutation(api.shoppingList.add);
   const toggleItem = useMutation(api.shoppingList.toggle);
   const removeItem = useMutation(api.shoppingList.remove);
+  const clearAll = useMutation(api.shoppingList.clearAll);
 
   const handleAddItem = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +122,16 @@ export function ShoppingWidget() {
     }
   }, [isSending]);
 
+  const handleClearAll = useCallback(async () => {
+    if (!confirm('Are you sure you want to clear the entire list?')) return;
+
+    try {
+      await clearAll();
+    } catch (error) {
+      console.error('Error clearing list:', error);
+    }
+  }, [clearAll]);
+
   // Merge server items with optimistic state
   const displayItems = useMemo(() => {
     const serverItems = (items || [])
@@ -162,7 +173,7 @@ export function ShoppingWidget() {
       <div className="widget-drag-handle flex items-center gap-2 mb-3">
         <ShoppingCart className="w-5 h-5 text-blue-600" />
         <h3 className="font-semibold text-gray-900">Shopping List</h3>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
           <button
             onClick={handleSendNotification}
             disabled={isSending}
@@ -176,8 +187,12 @@ export function ShoppingWidget() {
           >
             <Send className={cn("w-4 h-4", isSending && "animate-pulse")} />
           </button>
-          <button className="p-1 hover:bg-gray-100 rounded">
-            <X className="w-4 h-4 text-gray-400" />
+          <button
+            onClick={handleClearAll}
+            className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
+            title="Clear entire list"
+          >
+            Clear
           </button>
         </div>
       </div>
@@ -200,7 +215,7 @@ export function ShoppingWidget() {
             <div
               key={item._id.toString()}
               className={cn(
-                "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 group transition-opacity",
+                "flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-opacity",
                 item.completed && "opacity-50",
                 isPending && "opacity-70"
               )}
@@ -209,18 +224,19 @@ export function ShoppingWidget() {
                 onClick={() => !isPending && handleToggle(item._id as Id<"shoppingList">, item.completed)}
                 disabled={isPending}
                 className={cn(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0",
                   item.completed
                     ? "bg-green-500 border-green-500"
-                    : "border-gray-300 hover:border-green-400",
+                    : "border-gray-300 hover:border-green-400 active:border-green-400",
                   isPending && "cursor-not-allowed"
                 )}
               >
                 {item.completed && <Check className="w-3 h-3 text-white" />}
               </button>
               <span
+                onClick={() => !isPending && handleToggle(item._id as Id<"shoppingList">, item.completed)}
                 className={cn(
-                  "flex-1 text-sm",
+                  "flex-1 text-sm cursor-pointer select-none",
                   item.completed && "line-through text-gray-400"
                 )}
               >
@@ -229,7 +245,7 @@ export function ShoppingWidget() {
               {!isPending && (
                 <button
                   onClick={() => handleRemove(item._id as Id<"shoppingList">)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-opacity"
+                  className="p-1 hover:bg-red-100 active:bg-red-100 rounded transition-colors flex-shrink-0 md:opacity-0 md:group-hover:opacity-100"
                 >
                   <X className="w-4 h-4 text-red-500" />
                 </button>

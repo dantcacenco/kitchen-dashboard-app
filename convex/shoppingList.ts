@@ -69,3 +69,17 @@ export const clearCompleted = mutation({
     return completed.length;
   },
 });
+
+// Clear all items
+export const clearAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allItems = await ctx.db.query("shoppingList").collect();
+
+    for (const item of allItems) {
+      await ctx.db.delete(item._id);
+    }
+
+    return allItems.length;
+  },
+});

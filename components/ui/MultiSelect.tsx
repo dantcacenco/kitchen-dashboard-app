@@ -59,6 +59,7 @@ export function MultiSelect({
   const handleSelect = (value: string) => {
     onChange([...selected, value]);
     setSearch("");
+    setIsOpen(false);
     inputRef.current?.focus();
   };
 
