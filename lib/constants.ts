@@ -61,7 +61,7 @@ export const MOBILE_LAYOUT = [
   { i: "quickStats", x: 0, y: 3, w: 1, h: 2 },
   { i: "income", x: 0, y: 5, w: 1, h: 2 },
   { i: "savings", x: 0, y: 7, w: 1, h: 3 },
-  { i: "expenses", x: 0, y: 10, w: 1, h: 2 },
+  { i: "expenses", x: 0, y: 10, w: 1, h: 3 },
   { i: "weather", x: 0, y: 12, w: 1, h: 2 },
 ];
 
