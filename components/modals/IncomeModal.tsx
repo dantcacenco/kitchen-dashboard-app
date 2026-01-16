@@ -178,7 +178,7 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Income" size="lg">
-      <div className="flex flex-col h-full max-h-[70vh]">
+      <div className="flex flex-col">
         {/* Controls */}
         <div className="flex items-center justify-between gap-4 mb-4 flex-shrink-0">
           <div className="flex gap-2">
@@ -264,8 +264,8 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
               )}
             </div>
 
-            {/* View Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto min-h-0 mb-4">
+            {/* View Content */}
+            <div className="mb-4">
               {view === "source" ? (
                 <ChartView title="Income by Source">
                   <IncomeSourceChart data={chartData} />
@@ -325,11 +325,13 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
           </>
         )}
 
-        {/* Add Button - Always visible at bottom */}
-        <Button onClick={onAddNew} className="w-full flex-shrink-0">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Income
-        </Button>
+        {/* Add Button - Sticky at bottom */}
+        <div className="sticky bottom-0 bg-white pt-4 -mx-6 px-6 -mb-4 pb-4 border-t border-gray-100 mt-4">
+          <Button onClick={onAddNew} className="w-full">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Income
+          </Button>
+        </div>
       </div>
     </Modal>
   );

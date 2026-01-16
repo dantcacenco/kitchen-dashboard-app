@@ -50,11 +50,15 @@ export function ExpenseForm({
 
     setLoading(true);
     try {
+      // Parse date as local time (noon) to avoid timezone shifts
+      const [year, month, day] = date.split("-").map(Number);
+      const localDate = new Date(year, month - 1, day, 12, 0, 0);
+
       await addTransaction({
         amount: parseToCents(amount),
         category,
         description: description.trim(),
-        date: new Date(date).getTime(),
+        date: localDate.getTime(),
       });
       onSuccess?.();
     } catch (err) {
