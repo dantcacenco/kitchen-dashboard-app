@@ -133,8 +133,13 @@ export function MultiSelect({
             ref={inputRef}
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFocus={() => setIsOpen(true)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              // Open dropdown when user starts typing
+              if (e.target.value) {
+                setIsOpen(true);
+              }
+            }}
             onKeyDown={handleKeyDown}
             placeholder={selected.length === 0 ? placeholder : ""}
             className="flex-1 min-w-[100px] outline-none text-sm bg-transparent"
