@@ -54,7 +54,7 @@ export function ExpensesWidget({ onClick, onCategoryClick }: ExpensesWidgetProps
     <Card
       variant="gradient"
       gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-      className="h-full text-white cursor-pointer"
+      className="h-full text-white cursor-pointer overflow-visible"
       onClick={onClick}
     >
       <div className="widget-drag-handle h-full flex flex-col">
