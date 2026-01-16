@@ -77,11 +77,15 @@ export function IncomeForm({ onSuccess, onCancel }: IncomeFormProps) {
 
     setLoading(true);
     try {
+      // Parse date as local time (noon) to avoid timezone shifts
+      const [year, month, day] = date.split("-").map(Number);
+      const localDate = new Date(year, month - 1, day, 12, 0, 0);
+
       await addIncome({
         amount: parseToCents(amount),
         source: sources.join(", "),
         description: description.trim() || undefined,
-        date: new Date(date).getTime(),
+        date: localDate.getTime(),
         userId: userId as Id<"users">,
       });
       onSuccess?.();

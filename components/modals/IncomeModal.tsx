@@ -178,9 +178,9 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Income" size="lg">
-      <div className="space-y-4">
+      <div className="flex flex-col">
         {/* Controls */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 mb-4 flex-shrink-0">
           <div className="flex gap-2">
             {/* Time Range Toggle Button */}
             <button
@@ -243,7 +243,7 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
         ) : (
           <>
             {/* Total and User Breakdown */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-4 flex-shrink-0">
               <div className="text-center mb-3">
                 <div className="text-sm text-gray-500 mb-1">Total Income</div>
                 <div className="text-3xl font-bold text-green-600">
@@ -265,69 +265,73 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
             </div>
 
             {/* View Content */}
-            {view === "source" ? (
-              <ChartView title="Income by Source">
-                <IncomeSourceChart data={chartData} />
-              </ChartView>
-            ) : view === "trend" ? (
-              <ChartView title="Monthly Income Trend">
-                <IncomeBarChart
-                  income={income.map((i) => ({
-                    amount: i.amount,
-                    date: i.date,
-                    userId: i.userId,
-                  }))}
-                  users={users?.map((u) => ({ _id: u._id, name: u.name })) || []}
-                />
-              </ChartView>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {income.length > 0 ? (
-                  income.map((i) => (
-                    <div
-                      key={i._id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <DollarSign className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium capitalize">{i.source}</div>
-                          <div className="text-xs text-gray-500">
-                            {getUserName(i.userId)} • {formatDate(i.date)}
-                            {i.description && ` • ${i.description}`}
+            <div className="mb-4">
+              {view === "source" ? (
+                <ChartView title="Income by Source">
+                  <IncomeSourceChart data={chartData} />
+                </ChartView>
+              ) : view === "trend" ? (
+                <ChartView title="Monthly Income Trend">
+                  <IncomeBarChart
+                    income={income.map((i) => ({
+                      amount: i.amount,
+                      date: i.date,
+                      userId: i.userId,
+                    }))}
+                    users={users?.map((u) => ({ _id: u._id, name: u.name })) || []}
+                  />
+                </ChartView>
+              ) : (
+                <div className="space-y-2">
+                  {income.length > 0 ? (
+                    income.map((i) => (
+                      <div
+                        key={i._id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium capitalize">{i.source}</div>
+                            <div className="text-xs text-gray-500">
+                              {getUserName(i.userId)} • {formatDate(i.date)}
+                              {i.description && ` • ${i.description}`}
+                            </div>
                           </div>
                         </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium text-green-600">
+                            +{formatCurrency(i.amount)}
+                          </span>
+                          <button
+                            onClick={() => handleDelete(i._id)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium text-green-600">
-                          +{formatCurrency(i.amount)}
-                        </span>
-                        <button
-                          onClick={() => handleDelete(i._id)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm text-center py-8">
-                    No income for this period
-                  </p>
-                )}
-              </div>
-            )}
+                    ))
+                  ) : (
+                    <p className="text-gray-400 text-sm text-center py-8">
+                      No income for this period
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </>
         )}
 
-        {/* Add Button */}
-        <Button onClick={onAddNew} className="w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Income
-        </Button>
+        {/* Add Button - Sticky at bottom */}
+        <div className="sticky bottom-0 bg-white pt-4 -mx-6 px-6 -mb-4 pb-4 border-t border-gray-100 mt-4">
+          <Button onClick={onAddNew} className="w-full">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Income
+          </Button>
+        </div>
       </div>
     </Modal>
   );
