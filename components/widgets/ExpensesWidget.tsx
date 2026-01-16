@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -13,7 +14,7 @@ import {
 import { Card, Badge } from "@/components/ui";
 import { formatCurrency } from "@/lib/formatters";
 import { EXPENSE_CATEGORIES } from "@/lib/constants";
-import { getCurrentMonthRange, sum } from "@/lib/utils";
+import { getCurrentMonthRange, getCurrentYearRange, sum } from "@/lib/utils";
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   groceries: <ShoppingCart className="w-5 h-5" />,
@@ -30,7 +31,12 @@ interface ExpensesWidgetProps {
 }
 
 export function ExpensesWidget({ onClick, onCategoryClick }: ExpensesWidgetProps) {
-  const { start, end } = getCurrentMonthRange();
+  const [timeRange, setTimeRange] = useState<"month" | "year">("month");
+
+  const monthRange = getCurrentMonthRange();
+  const yearRange = getCurrentYearRange();
+  const { start, end } = timeRange === "month" ? monthRange : yearRange;
+
   const transactions = useQuery(api.transactions.listByDateRange, { start, end });
 
   // Calculate totals by category
@@ -48,14 +54,22 @@ export function ExpensesWidget({ onClick, onCategoryClick }: ExpensesWidgetProps
     <Card
       variant="gradient"
       gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-      className="h-full text-white cursor-pointer"
+      className="h-full text-white cursor-pointer overflow-visible"
       onClick={onClick}
     >
       <div className="widget-drag-handle h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg">EXPENSES</h3>
-          <Badge className="bg-white/20 text-white border-0">This Month</Badge>
+          <Badge
+            className="bg-white/20 text-white border-0 cursor-pointer hover:bg-white/30 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setTimeRange(timeRange === "month" ? "year" : "month");
+            }}
+          >
+            {timeRange === "month" ? "This Month" : "This Year"}
+          </Badge>
         </div>
 
         {/* Total */}
