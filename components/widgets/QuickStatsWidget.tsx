@@ -87,7 +87,7 @@ export function QuickStatsWidget() {
             </div>
             <div className="text-xs text-gray-500">
               {metalStats?.goldPrice && metalStats?.silverPrice
-                ? `${(metalStats.goldPrice / metalStats.silverPrice).toFixed(1)}:1 Au/Ag`
+                ? `${Math.round(metalStats.goldPrice / metalStats.silverPrice)}:1 Au/Ag`
                 : "-- Au/Ag ratio"}
             </div>
           </div>
