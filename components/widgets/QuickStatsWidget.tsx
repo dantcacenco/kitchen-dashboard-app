@@ -86,7 +86,9 @@ export function QuickStatsWidget() {
               {formatCurrency(metalGainLoss)}
             </div>
             <div className="text-xs text-gray-500">
-              {metalStats?.gainLossPercent.toFixed(1) || "0"}% gain
+              {metalStats?.goldPrice && metalStats?.silverPrice
+                ? `${(metalStats.goldPrice / metalStats.silverPrice).toFixed(1)}:1 Au/Ag`
+                : "-- Au/Ag ratio"}
             </div>
           </div>
         </div>
