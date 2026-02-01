@@ -5,7 +5,11 @@ import { v } from "convex/values";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("transactions").order("desc").collect();
+    return await ctx.db
+      .query("transactions")
+      .withIndex("byDate")
+      .order("desc")
+      .collect();
   },
 });
 
@@ -16,16 +20,16 @@ export const listByDateRange = query({
     end: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const allTransactions = await ctx.db
       .query("transactions")
-      .filter((q) =>
-        q.and(
-          q.gte(q.field("date"), args.start),
-          q.lte(q.field("date"), args.end)
-        )
-      )
+      .withIndex("byDate")
       .order("desc")
       .collect();
+
+    // Filter by date range
+    return allTransactions.filter(
+      (t) => t.date >= args.start && t.date <= args.end
+    );
   },
 });
 

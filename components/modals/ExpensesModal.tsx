@@ -83,10 +83,12 @@ export function ExpensesModal({
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const { start, end } = getDateRange(timeRange);
+  const { start, end } = useMemo(() => getDateRange(timeRange), [timeRange]);
 
   const transactions = useQuery(api.transactions.listByDateRange, { start, end });
   const removeTransaction = useMutation(api.transactions.remove);
+
+  const isLoading = transactions === undefined;
 
   const categoryTotals = useMemo(() => {
     if (!transactions) return {};
@@ -209,15 +211,22 @@ export function ExpensesModal({
           </div>
         </div>
 
-        {/* Total */}
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-500 mb-1">Total Expenses</div>
-          <div className="text-3xl font-bold text-gray-900">
-            {formatCurrency(totalAmount)}
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-12 text-gray-500">
+            <div className="animate-pulse">Loading expenses...</div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Total */}
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-sm text-gray-500 mb-1">Total Expenses</div>
+              <div className="text-3xl font-bold text-gray-900">
+                {formatCurrency(totalAmount)}
+              </div>
+            </div>
 
-        {/* View Content */}
+            {/* View Content */}
         {view === "pie" ? (
           <ChartView title="Spending by Category">
             <ExpensesPieChart data={chartData} />
@@ -334,7 +343,9 @@ export function ExpensesModal({
                 </p>
               )}
             </div>
-          </div>
+            </div>
+          )}
+          </>
         )}
 
         {/* Add Button */}
