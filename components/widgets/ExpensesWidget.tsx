@@ -28,10 +28,18 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 interface ExpensesWidgetProps {
   onClick?: () => void;
   onCategoryClick?: (category: string) => void;
+  onTimeRangeClick?: (timeRange: "month" | "year") => void;
 }
 
-export function ExpensesWidget({ onClick, onCategoryClick }: ExpensesWidgetProps) {
+export function ExpensesWidget({ onClick, onCategoryClick, onTimeRangeClick }: ExpensesWidgetProps) {
   const [timeRange, setTimeRange] = useState<"month" | "year">("month");
+
+  const handleTimeRangeToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newRange = timeRange === "month" ? "year" : "month";
+    setTimeRange(newRange);
+    onTimeRangeClick?.(newRange);
+  };
 
   const monthRange = getCurrentMonthRange();
   const yearRange = getCurrentYearRange();
@@ -63,10 +71,7 @@ export function ExpensesWidget({ onClick, onCategoryClick }: ExpensesWidgetProps
           <h3 className="font-semibold text-lg">EXPENSES</h3>
           <Badge
             className="bg-white/20 text-white border-0 cursor-pointer hover:bg-white/30 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setTimeRange(timeRange === "month" ? "year" : "month");
-            }}
+            onClick={handleTimeRangeToggle}
           >
             {timeRange === "month" ? "This Month" : "This Year"}
           </Badge>

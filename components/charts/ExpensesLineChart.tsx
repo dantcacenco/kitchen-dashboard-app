@@ -11,6 +11,7 @@ import {
   Legend,
 } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
+import { EXPENSE_CATEGORIES } from "@/lib/constants";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 
 interface ExpenseEntry {
@@ -23,8 +24,6 @@ interface ExpensesLineChartProps {
   expenses: ExpenseEntry[];
   monthsToShow?: number;
 }
-
-const CHART_COLOR = "#EF4444"; // Red color for expenses
 
 export function ExpensesLineChart({ expenses, monthsToShow = 6 }: ExpensesLineChartProps) {
   if (expenses.length === 0) {
@@ -42,7 +41,10 @@ export function ExpensesLineChart({ expenses, monthsToShow = 6 }: ExpensesLineCh
     end: endOfMonth(now),
   });
 
-  // Group expenses by month and calculate totals
+  // Get all unique categories from expenses
+  const categories = Array.from(new Set(expenses.map((e) => e.category)));
+
+  // Group expenses by month and category
   const chartData = months.map((month) => {
     const monthStart = startOfMonth(month).getTime();
     const monthEnd = endOfMonth(month).getTime();
@@ -51,12 +53,20 @@ export function ExpensesLineChart({ expenses, monthsToShow = 6 }: ExpensesLineCh
       (e) => e.date >= monthStart && e.date <= monthEnd
     );
 
-    const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0) / 100;
-
-    return {
+    // Calculate total for each category
+    const dataPoint: Record<string, number | string> = {
       month: format(month, "MMM"),
-      Total: total,
     };
+
+    categories.forEach((category) => {
+      const categoryTotal = monthExpenses
+        .filter((e) => e.category === category)
+        .reduce((sum, e) => sum + e.amount, 0) / 100;
+
+      dataPoint[category] = categoryTotal;
+    });
+
+    return dataPoint;
   });
 
   return (
@@ -86,14 +96,25 @@ export function ExpensesLineChart({ expenses, monthsToShow = 6 }: ExpensesLineCh
             }}
           />
           <Legend />
-          <Line
-            type="monotone"
-            dataKey="Total"
-            stroke={CHART_COLOR}
-            strokeWidth={2}
-            dot={{ fill: CHART_COLOR, strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6 }}
-          />
+          {categories.map((category) => {
+            const categoryInfo = EXPENSE_CATEGORIES[category as keyof typeof EXPENSE_CATEGORIES];
+            const color = categoryInfo?.color || "#9E9E9E";
+            const label = categoryInfo?.label || category;
+
+            return (
+              <Line
+                key={category}
+                type="monotone"
+                dataKey={category}
+                name={label}
+                stroke={color}
+                strokeWidth={2}
+                dot={{ fill: color, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+                connectNulls
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

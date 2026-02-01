@@ -49,6 +49,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [showExpensesModal, setShowExpensesModal] = useState(false);
   const [expenseCategory, setExpenseCategory] = useState<string | undefined>();
+  const [selectedExpenseTimeRange, setSelectedExpenseTimeRange] = useState<"this_month" | "this_year">("this_month");
   const [showAddIncomeModal, setShowAddIncomeModal] = useState(false);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
@@ -128,6 +129,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
       <ExpensesWidget
         onClick={handleExpenseClick}
         onCategoryClick={handleCategoryClick}
+        onTimeRangeClick={(range) => setSelectedExpenseTimeRange(range === "month" ? "this_month" : "this_year")}
       />
     ),
   };
@@ -181,6 +183,7 @@ export function Dashboard({ isEditing = false }: DashboardProps) {
           setShowExpensesModal(false);
           setShowAddExpenseModal(true);
         }}
+        initialTimeRange={selectedExpenseTimeRange}
       />
 
       <AddIncomeModal

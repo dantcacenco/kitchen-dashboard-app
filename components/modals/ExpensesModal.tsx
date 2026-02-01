@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -45,6 +45,7 @@ interface ExpensesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddNew: () => void;
+  initialTimeRange?: string;
 }
 
 function getDateRange(range: string): { start: number; end: number } {
@@ -77,11 +78,19 @@ export function ExpensesModal({
   isOpen,
   onClose,
   onAddNew,
+  initialTimeRange = "this_month",
 }: ExpensesModalProps) {
   const [view, setView] = useState<"table" | "pie" | "trend">("table");
-  const [timeRange, setTimeRange] = useState("this_month");
+  const [timeRange, setTimeRange] = useState(initialTimeRange);
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  // Update timeRange when modal opens with new initialTimeRange
+  useEffect(() => {
+    if (isOpen) {
+      setTimeRange(initialTimeRange);
+    }
+  }, [isOpen, initialTimeRange]);
 
   const { start, end } = useMemo(() => getDateRange(timeRange), [timeRange]);
 
