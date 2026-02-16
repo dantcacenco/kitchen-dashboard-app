@@ -21,8 +21,14 @@ export function QuickStatsWidget() {
   // Calculate stats
   const thisMonthTotal = sum(thisMonthExpenses?.map((t) => t.amount) || []);
   const lastMonthTotal = sum(lastMonthExpenses?.map((t) => t.amount) || []);
-  const expenseChange = lastMonthTotal > 0
-    ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100
+
+  // Normalize for partial month: compare this month's expenses to
+  // last month's daily average × current day of month
+  const currentDay = new Date().getDate();
+  const dailyAverageLastMonth = lastMonthTotal / 30;
+  const normalizedLastMonth = dailyAverageLastMonth * currentDay;
+  const expenseChange = normalizedLastMonth > 0
+    ? ((thisMonthTotal - normalizedLastMonth) / normalizedLastMonth) * 100
     : 0;
 
   // Savings progress (average of all goals)
