@@ -77,7 +77,7 @@ export function IncomeBarChart({ income, users, monthsToShow = 6 }: IncomeBarCha
           .reduce((sum, i) => sum + i.amount, 0) / 100
       : 0;
 
-    const total = danIncome + estherIncome;
+    const total = monthIncome.reduce((sum, i) => sum + i.amount, 0) / 100;
 
     return {
       month: format(month, "MMM"),
@@ -99,7 +99,7 @@ export function IncomeBarChart({ income, users, monthsToShow = 6 }: IncomeBarCha
             tick={{ fontSize: 12 }}
           />
           <YAxis
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `$${value.toLocaleString()}`}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12 }}
