@@ -273,7 +273,7 @@ export function IncomeModal({ isOpen, onClose, onAddNew }: IncomeModalProps) {
               ) : view === "trend" ? (
                 <ChartView title="Monthly Income Trend">
                   <IncomeBarChart
-                    income={income.map((i) => ({
+                    income={(allIncomeData || []).map((i) => ({
                       amount: i.amount,
                       date: i.date,
                       userId: i.userId,
